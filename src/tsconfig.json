@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",  //目标语言的版本
+    "module": "ESNext",  //指定生成代码的模板标准
+    "removeComments": true, //删除注释
+    "strict": true,
+    "moduleResolution": "node",
+ //   "esModuleInterop": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,//允许从没有默认导出的模块导入
+    "types": [
+      "phaser"
+    ]
+  }
+}
