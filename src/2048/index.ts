@@ -1,4 +1,7 @@
 import Phaser from 'phaser'
+import NoAudioSound = Phaser.Sound.NoAudioSound;
+import HTML5AudioSound = Phaser.Sound.HTML5AudioSound;
+import WebAudioSound = Phaser.Sound.WebAudioSound;
 
 
 class MainScene extends Phaser.Scene{
@@ -59,10 +62,14 @@ class PlayScene extends Phaser.Scene{
     };
     gameAreaBack?:Phaser.GameObjects.Graphics
 
+    isGameOver:boolean = false
     squareArray:SquareObj[][]=[]
 
     moveTimes:number = 0
+    squareTween:number =0
     keyup:boolean = true
+    soundSou?: NoAudioSound | HTML5AudioSound | WebAudioSound
+    soundDuang?: NoAudioSound | HTML5AudioSound | WebAudioSound
 
     cursors?: Phaser.Types.Input.Keyboard.CursorKeys
 
@@ -76,7 +83,8 @@ class PlayScene extends Phaser.Scene{
         this.load.image('background', "assets/bg.png");
         this.load.image('btnRestart', 'assets/btn-restart.png');
         this.load.image('btnTryagain', 'assets/btn-tryagain.png');
-
+     //   this.load.audio('sou',"assets/sou.mp3");
+        this.load.audio('duang',"assets/duang.mp3")
     }
     create(){
         let width:number = this.scale.width
@@ -85,6 +93,8 @@ class PlayScene extends Phaser.Scene{
         //添加背景图
         let tilingSprite = this.add.tileSprite(0,0,width,height,'background')
         tilingSprite.setOrigin(0) //如果不加会把tilingSprite的中电放到0,0
+     //   this.soundSou = this.sound.add('sou');
+        this.soundDuang = this.sound.add('duang')
         //添加分数
         let scoreTitle = this.add.text(0,5,"SCORE",{font: "bold 16px Arial", color: "#FFFFFF", align: "center"})
         //绘制区域
@@ -124,134 +134,92 @@ class PlayScene extends Phaser.Scene{
 
     }
     keydown(e:any){
+        if(this.moveTimes != 0 || this.isGameOver) return
         console.log(e)
         switch (e.code){
             case "ArrowUp":
-//                this.moveSquare(0,1)
-               this.moveSquareX(1)
+               this.moveSquare(0,1)
                 break;
             case "ArrowDown":
- //               this.moveSquare(0,-1)
-               this.moveSquareX(-1)
+               this.moveSquare(0,-1)
                 break;
-            // case "ArrowLeft":
-            //     this.moveSquare(1,1)
-            //     break;
-            // case "ArrowRight":
-            //     this.moveSquare(1,-1)
-            //     break;
+            case "ArrowLeft":
+                this.moveSquare(1,1)
+                break;
+            case "ArrowRight":
+                this.moveSquare(1,-1)
+                break;
         }
     }
-    isNotOutIndex(col:number,row:number){
-        return (col>=0) && (row>=0) && (col<4) && (row<4)
+    isNotOutIndex(...index:number[]){
+        let re = index.find(i=>{return (i<0 || i>3)})
+        return re == undefined
     }
-    moveSquareX(step:number){
+    moveSquare(mode:number,step:number){
         for (let i = 0; i < 4; i++) {
-            let moveIndex:number = step == 1? 0 : 3
             for (let j = 0; j < 4; j++) {
-                let relRow = step == 1? j : (4-1)-j
-                let currenSquare = this.squareArray[i][moveIndex]
-                do{
-                    relRow += step
-                }
-                while (this.isNotOutIndex(i,relRow) && this.squareArray[i][relRow].value ==0)
-                if (!this.isNotOutIndex(i,relRow)) break;
-
-                let nextSquare = this.squareArray[i][relRow]
-                let value = nextSquare.value
-                nextSquare.value = 0
-                console.log({curr:currenSquare})
-                console.log({next:nextSquare,value:value})
-                if(currenSquare.value ==0){
-                    this.moveTween(nextSquare,currenSquare,value)
-                }else if(currenSquare.value == nextSquare.value){ //
-                //    currenSquare.value *=2
-                    this.moveTween(nextSquare,currenSquare,value*2)
-                    moveIndex += step
-//                    this.genTween(currenSquare)
-                } else{// 不等
-                    currenSquare = this.squareArray[i][moveIndex+1]
-                    this.moveTween(nextSquare,currenSquare,value)
-                    moveIndex += step
-                }
-
-            }
-        }
-
-
-    }
-    moveSquare(dirc:number,step:number){
-        let isMove =false;
-        for (let i = 0; i < 4; i++) {
-            let moveIndex:number = step == 1? 0 : 3
-            for (let j = 0; j < 4; j++) {
-                let relCol , relRow, currenSquare
-                if(dirc == 1){
-                    relRow = step == 1? i : (4-1)-i
-                    relCol = step == 1? j : (4-1)-j
-                    currenSquare = this.squareArray[moveIndex][relRow]
+                let relIndex = step == 1? j : (4-1)-j
+                let currenSquare = mode == 0 ? this.squareArray[i][relIndex]:this.squareArray[relIndex][i]
+                if (mode == 0) {
+                    do{
+                        relIndex += step
+                    }
+                    while (this.isNotOutIndex(relIndex) && this.squareArray[i][relIndex].value ==0)
                 }else {
-                    relCol = step == 1? i : (4-1)-i
-                    relRow = step == 1? j : (4-1)-j
-                    currenSquare = this.squareArray[relCol][moveIndex]
+                    do{
+                        relIndex += step
+                    }
+                    while (this.isNotOutIndex(relIndex) && this.squareArray[relIndex][i].value ==0)
                 }
-                //合并
-              //  let currenSquare = this.squareArray[relCol][relRow]
-              //  console.log({i:relCol,j:relRow})
-                do{
-                    dirc == 1? relCol +=step :relRow += step
-                }
-                while (this.isNotOutIndex(relCol,relRow) && this.squareArray[relCol][relRow].value ==0)
-       //         console.log({i:relCol,j:relRow})
-        //        console.log(this.squareArray)
-                if (!this.isNotOutIndex(relCol,relRow)) break;
-         //       console.log({i:relCol,j:relRow})
-         //       console.log(this.squareArray)
-                let nextSquare = this.squareArray[relCol][relRow]
-                isMove = true
-
-                //移动
+                if (!this.isNotOutIndex(relIndex)) break;
+                let nextSquare = mode == 0 ? this.squareArray[i][relIndex]:this.squareArray[relIndex][i]
                 if(currenSquare.value ==0){
-                    this.moveTween(nextSquare,currenSquare,nextSquare.value)
-                }else
-                //合并
-                if(currenSquare.value == nextSquare.value){ //
-                    currenSquare.value *=2
-                    this.updateContainerFace(currenSquare)
+                    currenSquare.value =nextSquare.value
                     nextSquare.value = 0
-                    nextSquare.container.visible =false
-                    isMove = true
-                } else{// 不等
-                    currenSquare = dirc == 1?this.squareArray[moveIndex+step][relRow]:this.squareArray[relCol][moveIndex+step]
-                    this.moveTween(nextSquare,currenSquare,nextSquare.value)
+                    this.moveTween(nextSquare,currenSquare)
+                    j--
+                }else if(currenSquare.value == nextSquare.value){ //
+                    nextSquare.value = 0
+                    currenSquare.value *=2
+                    this.moveTween(nextSquare,currenSquare)
+                    this.SquareTween(currenSquare)
                 }
-                moveIndex += step
 
             }
         }
-      //  if(isMove) this.genSquare()
+    // if(this.moveTimes >0){
+    //     this.soundSou?.play()
+    // }
+    if (this.squareTween > 0) {
+       this.soundDuang?.play()
     }
-    moveTween(from:SquareObj,to:SquareObj,value:number){
+
+    }
+    moveTween(from:SquareObj,to:SquareObj){
+        let origin={x:from.container.x,y:from.container.y}
         this.moveTimes ++
         this.tweens.add({
             targets:from.container,
-            duration:1000,
+            duration:100,
             x:to.container.x,
             y:to.container.y,
             ease:'Linear',
+            //onStart:()=>{this.soundSou.play()},
             onComplete:()=>{
-                to.value = value
+         //       to.value = value
                 this.updateContainerFace(to)
                 from.container.visible =false
+                from.container.setPosition(origin.x,origin.y)
                 this.moveTimes--
                 if(this.moveTimes == 0){
+                   // this.soundSou?.stop()
                     this.genSquare()
                 }
             }
         })
-
     }
-    genTween(target:SquareObj){
+    SquareTween(target:SquareObj){
+        this.squareTween++
         this.tweens.add({
             targets: target.container,
             scaleX: 0.9,
@@ -259,7 +227,12 @@ class PlayScene extends Phaser.Scene{
             duration: 200,
             yoyo: true,
             ease:'Quad.easeOut',
-            repeat: 1
+            repeat: 1,
+            onComplete:()=>{
+                if (this.squareTween == 0){
+                    this.soundDuang?.stop()
+                }
+            }
         })
 
     }
@@ -282,26 +255,43 @@ class PlayScene extends Phaser.Scene{
         }
         return true
     }
+    isGameOverF():boolean{
+        if(!this.isFullSquare()) return false
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                if(this.isNotOutIndex(j + 1)&&this.squareArray[i][j].value == this.squareArray[i][j+1].value){
+                    return false
+                }
+                if(this.isNotOutIndex(i+1) && this.squareArray[i][j].value == this.squareArray[i+1][j].value){
+                    return false
+                }
+            }
+        }
+        this.isGameOver = true
+        this.add.image(120,200,'btnTryagain')
+        return true
+    }
     private genSquare(){
         let x=0,y=0
-        if(this.isFullSquare()) return
+        if(this.isGameOverF()) return
         do{
             x = Math.floor(Math.random()*4)
             y = Math.floor(Math.random()*4)
 
         }while (this.squareArray[x][y].value !=0 )
-
-        // console.log(this.squareArray[x][y].value)
-        // console.log(this.squareArray[x])
-        // console.log({x:x,y:y})
-        // console.log(this.squareArray)
         let value = 2;
         if(Math.random() > 0.5) {
             value = 4;
         }
         this.squareArray[x][y].value= value
         this.updateContainerFace(this.squareArray[x][y])
-        this.genTween(this.squareArray[x][y])
+        this.SquareTween(this.squareArray[x][y])
+
+        // if(this.isGameOverF()){
+        //     console.log("Game Over")
+        //     this.isGameOver = true
+        //     this.add.image(120,200,'btnTryagain')
+        // }
     }
     private transX(x:number){
         // return 10+8*(1+x)+45*x+45/2;
@@ -315,8 +305,6 @@ class PlayScene extends Phaser.Scene{
     update(time: number, delta: number) {
         super.update(time, delta);
         //console.log(this.cursors)
-
-
     }
 }
 
@@ -325,9 +313,8 @@ const config:Phaser.Types.Core.GameConfig = {
     width:240,
     height:400,
     type:Phaser.AUTO,
-    scene:PlayScene
+    scene:[MainScene,PlayScene]
 }
-
 export const game = new Phaser.Game(config)
 
 
