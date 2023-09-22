@@ -11,10 +11,10 @@ class MainScene extends Phaser.Scene{
     }
 
     preload(){
-        this.load.image('background', "assets/bg.png");
-        this.load.image('btnStart', 'assets/btn-start.png');
+        this.load.image('background', "2048/assets/bg.png");
+        this.load.image('btnStart', '2048/assets/btn-start.png');
       //  this.load.image('btnRestart', 'assets/btn-restart.png');
-        this.load.image('logo', 'assets/logo.png');
+        this.load.image('logo', '2048/assets/logo.png');
        // this.load.image('btnTryagain', 'assets/btn-tryagain.png');
     }
 
@@ -34,10 +34,12 @@ class MainScene extends Phaser.Scene{
         //添加开始按钮
         let startBtn = this.add.image(0,0,'btnStart').setOrigin(0);
         startBtn.setPosition((width-startBtn.width)/2,(height-startBtn.height)/2+100)
-        startBtn.setInteractive();
+        startBtn.setInteractive(); //启用对象的输入事件
         startBtn.on('pointerdown',()=>{
         //    console.log("game start")
-            this.scene.start('PlayScene');//切换sence
+            tilingSprite.destroy()
+            logo.destroy()
+            this.scene.start<PlayScene>('PlayScene');//切换sence
         })
 
 
@@ -80,11 +82,11 @@ class PlayScene extends Phaser.Scene{
 
     preload(){
         console.log("this is PlaySence")
-        this.load.image('background', "assets/bg.png");
-        this.load.image('btnRestart', 'assets/btn-restart.png');
-        this.load.image('btnTryagain', 'assets/btn-tryagain.png');
+        this.load.image('background', "2048/assets/bg.png");
+        this.load.image('btnRestart', '2048/assets/btn-restart.png');
+        this.load.image('btnTryagain', '2048/assets/btn-tryagain.png');
      //   this.load.audio('sou',"assets/sou.mp3");
-        this.load.audio('duang',"assets/duang.mp3")
+        this.load.audio('duang',"2048/assets/duang.mp3")
     }
     create(){
         let width:number = this.scale.width

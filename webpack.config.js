@@ -40,7 +40,8 @@ module.exports = {
         new HtmlWebpackPlugin({title: "Game"}),
         new CopyWebpackPlugin({
             patterns: [
-                { from: 'src/2048/assets', to: 'assets' }
+                { from: 'src/2048/assets', to: '2048/assets' },
+                { from: 'src/flappybird/assets', to: 'flappybird/assets' }
             ]
         })]
 
