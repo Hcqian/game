@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
 let bg:Phaser.GameObjects.TileSprite
-let width:number = 288
+let width:number = 350
 let height:number = 505
 
 
@@ -94,8 +94,9 @@ class loadScene extends Phaser.Scene{
 }
 class startScene extends Phaser.Scene{
 
-    platforms?: Phaser.Physics.Arcade.StaticGroup;
-    pipesX:number = 0
+  //  platforms?: Phaser.Physics.Arcade.StaticGroup;
+    platforms?: Phaser.Physics.Arcade.Group;
+    pipesX:number = 200 //管道位置
     scoreText?:Phaser.GameObjects.Text
     score:number=0
     player?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -108,7 +109,8 @@ class startScene extends Phaser.Scene{
     }
     create(){
    //     bg = this.add.tileSprite(width/2, height/2, width, height, 'background')
-        this.platforms = this.physics.add.staticGroup()
+   //     this.platforms = this.physics.add.staticGroup()
+        this.platforms = this.physics.add.group()
         this.createPipes()
         this.ground = this.add.tileSprite(config.width-335/2, config.height-112/2,335,112, 'ground')
         this.scoreText = this.add.text(10,10,this.score+'').setFontSize(36)
@@ -132,47 +134,46 @@ class startScene extends Phaser.Scene{
             bg.tilePositionX+=0.5
             this.ground!.tilePositionX+=5
             this.updatePipes()
-            this.platforms!.scaleX(-200)
+            this.platforms!.setVelocityX(-200)
 
         }
+
+        this.physics.add.overlap(this.player!,this.platforms!,()=>{
+            if(this.over) return;
+            this.sound.play('pipe-hit')
+            this.gameOver()
+        })
+        this.physics.add.collider(this.player!,this.ground!,()=>{
+            if(this.over) return;
+            this.sound.play('ground-hit')
+            this.gameOver()
+        })
     }
-    updatePipes(){
-        for (let child of this.platforms!.children) {
-            if(child.body.x< -54){
-                let topY = Phaser.Math.Between(-60,0)
-                let bottomY = Phaser.Math.Between(400,460)
-                if(child.body.y<20){
+    private gameOver(){
+        this.over = true
+        this.score = 0
+        this.player!.anims.stop()
+        this.platforms!.setVelocityX(0)
+
+    }
+    updatePipes() {
+        this.platforms!.children.iterate((child: Phaser.GameObjects.GameObject) => {
+            let body:Phaser.Physics.Arcade.Body =<Phaser.Physics.Arcade.Body> child.body
+            if (body.x < -54) {
+                let topY = Phaser.Math.Between(-60, 0)
+                let bottomY = Phaser.Math.Between(400, 460)
+                if (body.y < 20) {//上管
                     this.score++
-                    this.scoreText!.setText(this.score+'')
+                    this.scoreText!.setText(this.score + '')
                     this.sound.play('score')
-                    child.body.reset(config.width,topY)
-                }else{
-                    child.body.reset(config.width,bottomY)
+                    body.reset(config.width, topY)
+                } else {//下管
+                    body.reset(config.width, bottomY)
                 }
             }
-
-        }
-        // this.platforms!.children.iterate((child:Phaser.GameObjects.GameObject)=>{
-        //
-        // })
+            return true
+        })
     }
-
-    /**
-     *             if(child.body.x< -54){
-     *                 let topY = Phaser.Math.Between(-60,0)
-     *                 let bottomY = Phaser.Math.Between(400,460)
-     *                 if(child.body.y<20){
-     *                     this.score++
-     *                     this.scoreText!.setText(this.score)
-     *                     this.sound.play('score')
-     *                     child.body.reset(config.width,topY)
-     *                 }else{
-     *                     child.body.reset(config.width,bottomY)
-     *                 }
-     *             }
-     * @private
-     */
-
     private createPipes(){
         let interval = Phaser.Math.Between(100,135)
         let topY = Phaser.Math.Between(-40,20)
@@ -180,9 +181,11 @@ class startScene extends Phaser.Scene{
         this.pipesX += interval
         this.platforms!.create(this.pipesX,topY,"pipes")
         this.platforms!.create(this.pipesX,bottomY,"pipes",1)
-        // this.platforms?.children.iterate((child:Phaser.GameObjects.GameObject) =>{
-        //     child.body.allowGravity = false
-        // })
+        this.platforms?.children.iterate((child:Phaser.GameObjects.GameObject) =>{
+            let body:Phaser.Physics.Arcade.Body =<Phaser.Physics.Arcade.Body> child.body
+            body.allowGravity = false
+            return true
+        })
         if (this.platforms!.children.size < 4) {
             this.createPipes()
         }
