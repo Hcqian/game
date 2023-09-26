@@ -112,7 +112,9 @@ class startScene extends Phaser.Scene{
    //     this.platforms = this.physics.add.staticGroup()
         this.platforms = this.physics.add.group()
         this.createPipes()
-        this.ground = this.add.tileSprite(config.width-335/2, config.height-112/2,335,112, 'ground')
+        // this.ground = this.add.tileSprite(config.width-335/2, config.height-112/2,335,112, 'ground')
+        let g = this.add.tileSprite(config.width-335/2, config.height-112/2,335,112, 'ground')
+        this.ground = this.physics.add.existing(g,true)
         this.scoreText = this.add.text(10,10,this.score+'').setFontSize(36)
         this.player = this.physics.add.sprite(100,100,'bird')
         this.input.on('pointerdown',()=>{
@@ -135,7 +137,10 @@ class startScene extends Phaser.Scene{
             this.ground!.tilePositionX+=5
             this.updatePipes()
             this.platforms!.setVelocityX(-200)
+        }
 
+        if(this.player!.angle < 60) {
+            this.player!.angle += 1
         }
 
         this.physics.add.overlap(this.player!,this.platforms!,()=>{
@@ -154,7 +159,7 @@ class startScene extends Phaser.Scene{
         this.score = 0
         this.player!.anims.stop()
         this.platforms!.setVelocityX(0)
-
+        game.scene.start<overScene>('overScene')
     }
     updatePipes() {
         this.platforms!.children.iterate((child: Phaser.GameObjects.GameObject) => {
@@ -191,11 +196,35 @@ class startScene extends Phaser.Scene{
         }
 
     }
+    restart(){
+        this.score = 0
+        this.player?.setPosition(100,100).play('fly')
+        this.player!.angle = 0
+        this.player!.setVelocityY(-200)
+        this.scoreText!.setText(this.score+'')
+        let rd = Phaser.Math.Between(100,135);
+        (this.platforms!.children.entries[0].body as Phaser.Physics.Arcade.Body ).reset(this.pipesX,Phaser.Math.Between(-40,30));
+        (this.platforms!.children.entries[1].body as Phaser.Physics.Arcade.Body ).reset(this.pipesX,Phaser.Math.Between(390,440));
+        (this.platforms!.children.entries[2].body as Phaser.Physics.Arcade.Body ).reset(this.pipesX+rd,Phaser.Math.Between(-40,30));
+        (this.platforms!.children.entries[3].body as Phaser.Physics.Arcade.Body ).reset(this.pipesX+rd,Phaser.Math.Between(390,440));
+        game.scene.resume<startScene>('startScene');
+        this.over =false
+    }
 }
 class overScene extends Phaser.Scene{
     constructor() {
         super('overScene');
     }
+    create(){
+        let title = this.add.image(config.width/2,100,'gameover')
+        let button =  this.add.image(config.width/2,config.height-100,'start-button').setInteractive()
+        button.on('pointerdown',  ()=> {
+            title.destroy()
+            button.destroy()
+            game.scene.getScene<startScene>('startScene').restart()
+        });
+    }
+
 }
 
 const config = {
