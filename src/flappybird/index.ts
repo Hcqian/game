@@ -94,7 +94,6 @@ class loadScene extends Phaser.Scene{
 }
 class startScene extends Phaser.Scene{
 
-  //  platforms?: Phaser.Physics.Arcade.StaticGroup;
     platforms?: Phaser.Physics.Arcade.Group;
     pipesX:number = 200 //管道位置
     scoreText?:Phaser.GameObjects.Text
@@ -108,8 +107,6 @@ class startScene extends Phaser.Scene{
         super('startScene');
     }
     create(){
-   //     bg = this.add.tileSprite(width/2, height/2, width, height, 'background')
-   //     this.platforms = this.physics.add.staticGroup()
         this.platforms = this.physics.add.group()
         this.createPipes()
         // this.ground = this.add.tileSprite(config.width-335/2, config.height-112/2,335,112, 'ground')
