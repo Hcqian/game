@@ -41,7 +41,8 @@ module.exports = {
         new CopyWebpackPlugin({
             patterns: [
                 { from: 'src/2048/assets', to: '2048/assets' },
-                { from: 'src/flappybird/assets', to: 'flappybird/assets' }
+                { from: 'src/flappybird/assets', to: 'flappybird/assets' },
+                { from: 'src/jump/assets', to: 'jump/assets' }
             ]
         })]
 
