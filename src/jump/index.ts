@@ -19,10 +19,10 @@ class loadGame extends Phaser.Scene{
     }
 
     create(){
-        this.add.tileSprite(this.cameras.main.width/2,this.cameras.main.height/2,this.cameras.main.width,this.cameras.main.height,'backgroud')
+        let bg = this.add.tileSprite(this.cameras.main.width/2,this.cameras.main.height/2,this.cameras.main.width,this.cameras.main.height,'backgroud')
         let startbutton = this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','Play_01').setInteractive()
-        this.add.image(320,50,'atlas','top')
-        this.add.image(320,this.cameras.main.height,'atlas','buttom')
+        this.add.image(320,50,'atlas','top')  //怎么遮盖
+        this.add.image(320,this.cameras.main.height,'atlas','bottom')
 
         startbutton.on('pointerover',()=>{
             startbutton.setTexture('atlas','Play_02')
@@ -32,7 +32,7 @@ class loadGame extends Phaser.Scene{
         })
         startbutton.on('pointerdown',()=>{
             startbutton.destroy()
-            game.scene.start<startGame>('startGame')
+            game.scene.start<startGame>('startGame',{backgroud:bg})
         })
 
     }
@@ -44,41 +44,97 @@ class startGame extends Phaser.Scene{
     platforms?:Phaser.Physics.Arcade.StaticGroup
     cursors?:Phaser.Types.Input.Keyboard.CursorKeys
     jumped?:boolean =false
+    move?:boolean = false
+    backgroud?:Phaser.GameObjects.TileSprite
+    platformsColloder?:Phaser.Physics.Arcade.Collider
+
+    playerY:number = 0
+
+    over:boolean = false
 
     constructor() {
         super('startGame');
     }
 
-    create(){
+    create(data: { backgroud:Phaser.GameObjects.TileSprite }){
+        this.backgroud = data.backgroud
         this.player = this.physics.add.sprite(this.cameras.main.width/2,this.cameras.main.height-200,'player')
+        this.player.setCollideWorldBounds(true)
+        this.playerY = this.player.y
         this.jumped = false;
         this.platforms = this.physics.add.staticGroup()
-        this.platforms.create(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','platform0')
-        this.physics.add.collider(this.player,this.platforms);
+        this.platforms.create(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','platform0');
+      //  (this.platforms.getChildren()[0].body as Phaser.Physics.Arcade.Body).allowGravity = false
+        this.platformsColloder = this.physics.add.collider(this.player,this.platforms)
+
         this.cursors = this.input.keyboard!.createCursorKeys();
+        this.addPlatform()
 
     }
 
     private addPlatform(){
-
+        let  width = Phaser.Math.Between(100,400)
+        let  height = Phaser.Math.Between(200,300)
+        this.platforms!.create(width,0,'atlas','platform0')
+        width = Phaser.Math.Between(100,400)
+        this.platforms!.create(width,height,'atlas','platform0')
+        width = Phaser.Math.Between(100,400)
+        height = Phaser.Math.Between(350,450)
+        this.platforms!.create(width,height,'atlas','platform0')
+        width = Phaser.Math.Between(100,400)
+        height = Phaser.Math.Between(500,600)
+        this.platforms!.create(width,height,'atlas','platform0')
+    }
+    private updatePlatform(){
+        this.platforms!.incY(1)
+        this.backgroud!.tilePositionY-=1
+        this.platforms!.refresh()
+        this.platforms!.children.iterate((child:Phaser.GameObjects.GameObject)=>{
+            let body:Phaser.Physics.Arcade.Body =<Phaser.Physics.Arcade.Body> child.body
+            if (body.y > 800) {
+                let width = Phaser.Math.Between(100,400)
+                body.reset(width,0)
+            }
+            return true
+        })
 
     }
 
     update(time: number, delta: number) {
+        if (this.over) return
+        if (this.player!.y > 750) {this.over =true}
         super.update(time, delta);
+        this.updatePlatform()
+       // if (!this.move && this.cursors!.left.isDown) {
         if (this.cursors!.left.isDown) {
-            this.player!.setVelocityX(-50);
-        }else if(this.cursors!.right.isDown){
-            this.player!.setVelocityX(50);
-        }else if(!this.jumped && this.cursors!.up.isDown){
-            this.jumped = true
-            this.player!.setVelocityY(-350)
+         //   this.move =true
+            this.player!.setVelocityX(-160);
+       // }else if(!this.move && this.cursors!.right.isDown){
+       }else if(this.cursors!.right.isDown){
+           // this.move =true
+            this.player!.setVelocityX(160);
         }else {
-            if(this.player!.body.touching.down) {
-                this.jumped = false
-                this.player!.setVelocityX(0)
+            // if(this.player!.body.touching.down) {
+            //  //   this.move =false
+            //     this.jumped = false
+            //     this.player!.setVelocityX(0)
+            // }
+        }
+        if(this.player!.body.touching.down) {
+            this.jumped = false
+            this.player!.setVelocityX(0)
+        }
+        if(!this.jumped){
+            this.jumped = true
+            this.player!.setVelocityY(-400)
+            this.platformsColloder!.active = false
+        }else {
+         //   console.log(this.player!.body.velocity.y)
+            if (!this.platformsColloder!.active && this.player!.body.velocity.y > 0) {
+                this.platformsColloder!.active = true
             }
         }
+
     }
 }
 
