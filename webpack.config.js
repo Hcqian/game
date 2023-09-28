@@ -1,9 +1,17 @@
 const path = require('path');
+const fs = require('fs');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const {
     CleanWebpackPlugin
 } = require("clean-webpack-plugin")
+
+let srcPath = path.resolve(__dirname, 'src')
+let files = fs.readdirSync(srcPath).filter(file=>fs.existsSync(path.join(srcPath, file+'/assets')))
+let patterns = []
+files.forEach(
+    file=>patterns.push({from:'src/'+file+'/assets',to:file+'/assets'})
+)
 
 module.exports = {
     entry: './src/index.ts',
@@ -39,11 +47,12 @@ module.exports = {
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({title: "Game"}),
         new CopyWebpackPlugin({
-            patterns: [
-                { from: 'src/2048/assets', to: '2048/assets' },
-                { from: 'src/flappybird/assets', to: 'flappybird/assets' },
-                { from: 'src/jump/assets', to: 'jump/assets' }
-            ]
+            patterns: patterns
+            //     [
+            //     { from: 'src/2048/assets', to: '2048/assets' },
+            //     { from: 'src/flappybird/assets', to: 'flappybird/assets' },
+            //     { from: 'src/jump/assets', to: 'jump/assets' }
+            // ]
         })]
 
 };
