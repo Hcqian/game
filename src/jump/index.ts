@@ -77,7 +77,7 @@ class butEnemy{
 //     }
 //
 // }
-
+/**
 class oncePlatform{
 
     body?:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -93,6 +93,7 @@ class oncePlatform{
         this.scene.onceplats!.add(this.body)
         this.body.setCollideWorldBounds(true);
         (this.body.body! as Phaser.Physics.Arcade.Body).allowGravity = false
+        this.body.setGravityY(800)
     }
 
     removeBut(){
@@ -124,7 +125,7 @@ class movePlatform{
         this.body?.destroy()
     }
 }
-
+**/
 class breakPlatform{
     scene:startGame
     private breakCollider?:Phaser.Physics.Arcade.Collider
@@ -263,15 +264,46 @@ class startGame extends Phaser.Scene{
             this.backgroud!.tilePositionY-=10
             this.player!.y += 10
         }
-        this.moveplats!.getChildren().forEach(c=>{
-            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> c
-            console.log(child.body!.velocity.x)
+       // console.log(this.player!.body.mass)
+        for (let i = this.moveplats!.getChildren().length -1; i >= 0 ; i--) {
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.onceplats!.getChildren()[i]
             if (Object.is(child.body!.velocity.x , -0)) {
                 child.setVelocityX(-100)
             }else if (Object.is(child.body!.velocity.x , 0)){
                 child.setVelocityX(100)
             }
-        })
+            if(child.body!.y>750){
+                this.moveplats!.remove(child)
+                child.destroy()
+            }
+
+        }
+        for (let i = this.onceplats!.getChildren().length -1; i >= 0 ; i--) {
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.onceplats!.getChildren()[i]
+            if(child.body!.y>750){
+                this.onceplats!.remove(child)
+                child.destroy()
+            }
+        }
+        // this.moveplats!.getChildren().forEach(c=>{
+        //     let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> c
+        //     if (Object.is(child.body!.velocity.x , -0)) {
+        //         child.setVelocityX(-100)
+        //     }else if (Object.is(child.body!.velocity.x , 0)){
+        //         child.setVelocityX(100)
+        //     }
+        //     if(child.body!.y>800){
+        //         this.moveplats!.remove(child)
+        //         child.destroy()
+        //     }
+        // })
+        // this.onceplats!.getChildren().forEach(c=>{
+        //     let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> c
+        //     if(child.body!.y>800){
+        //         this.onceplats!.remove(child)
+        //         child.destroy()
+        //     }
+        // })
 
         if (this.enemyBut != undefined && this.enemyBut.staticBody!.y > 800) {
             this.enemyBut?.removeBut()
@@ -288,7 +320,7 @@ class startGame extends Phaser.Scene{
         })
     }
     randomObj(x:number,y:number){
-        new oncePlatform({x:x,y:y,scene:this})
+        this.addOncePlat(x,y)
   /**
         if (Phaser.Math.Between(0, 19) < 2)
         {
@@ -299,12 +331,29 @@ class startGame extends Phaser.Scene{
 
         }else if(Phaser.Math.Between(0, 10) < 2){
 
-            new movePlatform({x:x,y:y,scene:this})
+            this.addMovePlat(x,y)
 
         }else if(Phaser.Math.Between(0, 10) < 2){
-            new oncePlatform({x:x,y:y,scene:this})
+            this.addOncePlat(x,y)
         }
 **/
+    }
+
+    addMovePlat(x:number,y:number){
+        let mp = this.physics.add.sprite(x,y,'atlas','platform1');
+        this.moveplats!.add(mp)
+        mp.setCollideWorldBounds(true)
+        mp.setVelocityX(100);
+        (mp.body! as Phaser.Physics.Arcade.Body).allowGravity = false
+        mp.body!.immovable = true
+    }
+    addOncePlat(x:number,y:number){
+        let op = this.physics.add.sprite(x,y,'atlas','platform3');
+        this.onceplats!.add(op)
+        op.setCollideWorldBounds(true);
+        (op.body! as Phaser.Physics.Arcade.Body).allowGravity = false
+        op.setMass(0.05)
+        //op.setGravityY(800)
     }
     gameOver(){
         this.over =true
