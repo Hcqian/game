@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import Pan = Phaser.Cameras.Scene2D.Effects.Pan;
 
 class loadGame extends Phaser.Scene{
 
@@ -21,10 +22,15 @@ class loadGame extends Phaser.Scene{
     }
 
     create(){
+        // this.cameras.main.height=config.height-200
+      // this.cameras.main.setBounds(-100,-100,500,800)
         let bg = this.add.tileSprite(this.cameras.main.width/2,this.cameras.main.height/2,this.cameras.main.width,this.cameras.main.height,'backgroud')
-        let startbutton = this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','Play_01').setInteractive()
+       let startbutton = this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','Play_01').setInteractive()
+        //let startbutton = this.add.image(0,0,'atlas','Play_01').setInteractive()
         //this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','platform1');
         //let b = new Phaser.Geom.Rectangle(0, 0, 500, 200)
+
+
 
         startbutton.on('pointerover',()=>{
             startbutton.setTexture('atlas','Play_02')
@@ -53,13 +59,15 @@ class butEnemy{
     private genBut(x:number,y:number){
         this.staticBody = this.scene.physics.add.staticSprite(x,y,'atlas','but1')
         this.staticBody.anims.play('butFly')
-        this.butCollider = this.scene.physics.add.collider(this.scene.player!,this.staticBody,()=>{
-            this.scene.gameOver()
-        })
-        this.scene.platforms!.add(this.staticBody)
+        // this.butCollider = this.scene.physics.add.collider(this.scene.player!,this.staticBody,()=>{},()=>{
+        //     this.scene.gameOver()
+        //     return false
+        // })
+
+        //this.scene.platforms!.add(this.staticBody)
     }
     removeBut(){
-        this.scene.platforms!.remove(this.staticBody!)
+        //this.scene.platforms!.remove(this.staticBody!)
         //this.scene.anims.remove('butFly')
         this.scene.physics.world.removeCollider(this.butCollider!)
         this.staticBody?.destroy()
@@ -67,95 +75,6 @@ class butEnemy{
 
 
 }
-
-// class movePlat extends Phaser.GameObjects.Sprite{
-//
-//     diract:number =1
-//     constructor(scene:Phaser.Scene, x:number, y:number, texture: string) {
-//         super(scene, x, y, texture);
-//         scene.add.existing<movePlat>(this);
-//     }
-//
-// }
-/**
-class oncePlatform{
-
-    body?:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-    scene:startGame
-
-    constructor(config:{x:number,y:number,scene:startGame}) {
-        this.scene =config.scene
-        this.gen(config.x,config.y)
-    }
-
-    private gen(x:number,y:number){
-        this.body = this.scene.physics.add.sprite(x,y,'atlas','platform3');
-        this.scene.onceplats!.add(this.body)
-        this.body.setCollideWorldBounds(true);
-        (this.body.body! as Phaser.Physics.Arcade.Body).allowGravity = false
-        this.body.setGravityY(800)
-    }
-
-    removeBut(){
-        this.scene.onceplats!.remove(this.body!)
-        this.body?.destroy()
-    }
-}
-class movePlatform{
-    body?:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-    scene:startGame
-
-    constructor(config:{x:number,y:number,scene:startGame}) {
-        this.scene =config.scene
-        this.gen(config.x,config.y)
-    }
-
-    private gen(x:number,y:number){
-        this.body = this.scene.physics.add.sprite(x,y,'atlas','platform1');
-        this.scene.moveplats!.add(this.body)
-        this.body.setCollideWorldBounds(true)
-        this.body.setVelocityX(100);
-        (this.body.body! as Phaser.Physics.Arcade.Body).allowGravity = false
-        this.body.body!.immovable = true
-
-    }
-
-    removeBut(){
-        this.scene.moveplats!.remove(this.body!)
-        this.body?.destroy()
-    }
-}
-**/
-class breakPlatform{
-    scene:startGame
-    private breakCollider?:Phaser.Physics.Arcade.Collider
-    staticBody?:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-    isBreak:boolean = false
-    constructor(config:{x:number,y:number,scene:startGame}) {
-        this.scene =config.scene
-        this.gen(config.x,config.y)
-    }
-
-    private gen(x:number,y:number){
-        this.staticBody = this.scene.physics.add.sprite(x,y,'atlas','platform2');
-        this.breakCollider = this.scene.physics.add.collider(this.scene.player!,this.staticBody,()=>{},()=>{
-            if (this.scene.player!.body.velocity.y < 0 && !this.isBreak) {
-                (this.staticBody!.body as Phaser.Physics.Arcade.Body).allowGravity = true
-                this.staticBody!.anims.play('platformSheet')
-                this.isBreak =true
-               // this.scene.breakplats!.remove(this.staticBody!)
-            }
-            return false
-        })
-        this.scene.breakplats!.add(this.staticBody)
-    }
-    removeBut(){
-        this.scene.breakplats!.remove(this.staticBody!)
-        this.scene.physics.world.removeCollider(this.breakCollider!)
-        this.staticBody?.destroy()
-    }
-}
-
 class startGame extends Phaser.Scene{
 
     public player?:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -167,13 +86,17 @@ class startGame extends Phaser.Scene{
     platformsColloder?:Phaser.Physics.Arcade.Collider
     movePlatColloder?:Phaser.Physics.Arcade.Collider
     oncePlatColloder?:Phaser.Physics.Arcade.Collider
-    enemyBut?:butEnemy|undefined
-    prePlat?:Phaser.GameObjects.GameObject
+    breakPlatColloder?:Phaser.Physics.Arcade.Collider
+    butColloder?:Phaser.Physics.Arcade.Collider
+    //enemyBut?:Phaser.Types.Physics.Arcade.SpriteWithStaticBody
+    prePlat?:Phaser.Types.Physics.Arcade.SpriteWithStaticBody
 
     // onceplats?:Phaser.Physics.Arcade.Group
     breakplats?:Phaser.Physics.Arcade.Group
     moveplats?:Phaser.Physics.Arcade.Group
     onceplats?:Phaser.Physics.Arcade.Group
+    // onceplats?:Phaser.Physics.Arcade.StaticGroup
+    enemyGroup?:Phaser.Physics.Arcade.StaticGroup
 
 //    playerY:number = 0
 
@@ -184,33 +107,40 @@ class startGame extends Phaser.Scene{
     }
 
     create(data: { backgroud:Phaser.GameObjects.TileSprite }){
+        // this.cameras.main.setSize(500,650)
+        //this.cameras.main.setBounds(0,200,500,1000)
         this.backgroud = data.backgroud
         this.player = this.physics.add.sprite(this.cameras.main.width/2,this.cameras.main.height-200,'player').setScale(0.5,0.5)
         this.player.setCollideWorldBounds(true)
-
-     //   this.playerY = this.player.y
-        // this.player.setScrollFactor(0,1)//相机
-        //let camera = this.cameras.main.setSize(500,400)
-        //this.cameras.main.startFollow(this.player)
-
-       // this.cameras.main.stopFollow()
 
         this.jumped = false;
         this.platforms = this.physics.add.staticGroup()
         this.moveplats = this.physics.add.group()
         this.onceplats = this.physics.add.group()
+        //this.onceplats = this.physics.add.staticGroup()
         this.breakplats =this.physics.add.group({
             allowGravity: false
         })
+        this.enemyGroup = this.physics.add.staticGroup()
+
         this.platforms.create(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','platform0');
        // this.prePlat = this.platforms.getChildren()[0]
         this.platformsColloder = this.physics.add.collider(this.player,this.platforms)
         this.movePlatColloder = this.physics.add.collider(this.player,this.moveplats)
         this.oncePlatColloder = this.physics.add.collider(this.player,this.onceplats)
+        this.breakPlatColloder = this.physics.add.collider(this.player!,this.breakplats,()=>{},(object1, object2)=>{
+            let sprite = <Phaser.Physics.Arcade.Sprite> object2;
+                (sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true
+                sprite!.anims.play('platformSheet')
+            return false
+        })
+        this.butColloder = this.physics.add.collider(this.player!,this.enemyGroup,()=>{
+            this.gameOver()
+        })
 
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.add.image(320,50,'atlas','top').setDepth(99)
-        this.add.image(320,this.cameras.main.height,'atlas','bottom').setDepth(100)
+       this.add.image(320,50,'atlas','top').setDepth(99)
+       this.add.image(320,this.cameras.main.height,'atlas','bottom').setDepth(100)
 
 
         this.addPlatform()
@@ -218,18 +148,13 @@ class startGame extends Phaser.Scene{
     }
 
     private addPlatform(){
-        // let b = new Phaser.Geom.Rectangle(0, this.prePlatPoint.y-400, 500, 200)
-        // Phaser.Math.RandomXY(b as Phaser.Math.Vector2)
-        this.prePlat = this.platforms!.getChildren()[this.platforms!.getLength()-1]
-        console.log(this.prePlat)
-        while (this.prePlat!.body!.position.y > 100){
-            let  width = Phaser.Math.Between(50,450)
-            let  height = Phaser.Math.Between(Math.max(this.prePlat!.body!.position.y-300,0),this.prePlat!.body!.position.y-100)
-            this.platforms!.create(width,height,'atlas','platform0')
-            this.prePlat = this.platforms!.getChildren()[this.platforms!.getLength()-1]
+        this.prePlat = <Phaser.Types.Physics.Arcade.SpriteWithStaticBody>this.platforms!.getChildren()[this.platforms!.getLength()-1]
+        for(let i = 0; i < 5; i++){
+            let randompoint = this.randomCycleDirct(200,200,{x:this.prePlat!.x,y:this.prePlat!.y})
+            this.platforms!.create(randompoint.x,randompoint.y,'atlas','platform0')
+            this.prePlat = <Phaser.Types.Physics.Arcade.SpriteWithStaticBody>this.platforms!.getChildren()[this.platforms!.getLength()-1]
         }
     }
-
     private addAnims(){
         this.anims.create({
             key: 'platformSheet',
@@ -254,19 +179,66 @@ class startGame extends Phaser.Scene{
         })
 
     }
-    private updatePlatform(){
-        if(this.player!.y < 400 && this.player!.body.velocity.y > 0){
-            this.platforms!.incY(10)
-            this.platforms!.refresh()
-            this.breakplats!.incY(10)
-            this.moveplats!.incY(10)
-            this.onceplats!.incY(10)
-            this.backgroud!.tilePositionY-=10
-            this.player!.y += 10
-        }
-       // console.log(this.player!.body.mass)
-        for (let i = this.moveplats!.getChildren().length -1; i >= 0 ; i--) {
+
+    private scroll(y:number){
+        //this.platforms!.incY(y).refresh()
+        //this.enemyGroup!.incY(y).refresh()
+        //this.breakplats!.incY(y)
+        this.moveplats!.incY(y)
+       // this.onceplats!.incY(y)
+        this.backgroud!.tilePositionY -= y
+        for (let i = this.onceplats!.getChildren().length -1; i >= 0 ; i--) {
             let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.onceplats!.getChildren()[i]
+            child.y+=y
+            if(child.body!.y>750){
+                this.onceplats!.remove(child)
+                child.destroy()
+            }
+        }
+
+        for (let i = this.breakplats!.getChildren().length -1; i >= 0 ; i--) {
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.breakplats!.getChildren()[i]
+            child.y+=y
+            if(child.body!.y>750){
+                this.breakplats!.remove(child)
+                child.destroy()
+            }
+        }
+        for (let i = this.enemyGroup!.getChildren().length -1; i >= 0 ; i--) {
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithStaticBody> this.enemyGroup!.getChildren()[i]
+            child.y+=y
+            child.refreshBody()
+            if(child.body!.y>750){
+                child.anims.stop()
+                this.enemyGroup!.remove(child)
+                child.destroy()
+            }
+        }
+
+        this.platforms!.children.iterate((obj:Phaser.GameObjects.GameObject)=>{
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithStaticBody> obj
+            child.y+=y
+            child.refreshBody()
+            if (child.y > 800) {
+                let randompoint = this.randomCycleDirct(200,200,{x:this.prePlat!.x,y:this.prePlat!.y})
+                this.prePlat = <Phaser.Types.Physics.Arcade.SpriteWithStaticBody>this.randomObj(randompoint.x,randompoint.y,child)
+            }
+            return true
+        })
+
+    }
+    flag:number = 0
+    private updatePlatform(){
+        //console.log(delta)
+        if(this.player!.y < 350 || (this.flag <30 && this.flag > 0)) {
+            this.scroll(Math.min(this.flag,10))
+            this.flag++
+            this.player!.y+=Math.min(this.flag,10)
+        }else {
+            this.flag = 0
+        }
+        for (let i = this.moveplats!.getChildren().length -1; i >= 0 ; i--) {
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.moveplats!.getChildren()[i]
             if (Object.is(child.body!.velocity.x , -0)) {
                 child.setVelocityX(-100)
             }else if (Object.is(child.body!.velocity.x , 0)){
@@ -276,84 +248,60 @@ class startGame extends Phaser.Scene{
                 this.moveplats!.remove(child)
                 child.destroy()
             }
+        }
 
-        }
-        for (let i = this.onceplats!.getChildren().length -1; i >= 0 ; i--) {
-            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.onceplats!.getChildren()[i]
-            if(child.body!.y>750){
-                this.onceplats!.remove(child)
-                child.destroy()
-            }
-        }
-        // this.moveplats!.getChildren().forEach(c=>{
-        //     let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> c
-        //     if (Object.is(child.body!.velocity.x , -0)) {
-        //         child.setVelocityX(-100)
-        //     }else if (Object.is(child.body!.velocity.x , 0)){
-        //         child.setVelocityX(100)
-        //     }
-        //     if(child.body!.y>800){
-        //         this.moveplats!.remove(child)
-        //         child.destroy()
-        //     }
-        // })
-        // this.onceplats!.getChildren().forEach(c=>{
-        //     let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> c
-        //     if(child.body!.y>800){
-        //         this.onceplats!.remove(child)
-        //         child.destroy()
-        //     }
-        // })
-
-        if (this.enemyBut != undefined && this.enemyBut.staticBody!.y > 800) {
-            this.enemyBut?.removeBut()
-            this.enemyBut =undefined
-        }
-        this.platforms!.children.iterate((child:Phaser.GameObjects.GameObject)=>{
-            let body:Phaser.Physics.Arcade.Body =<Phaser.Physics.Arcade.Body> child.body
-            if (body.y > 800) {
-                let width = Phaser.Math.Between(50,450)
-                body.reset(width,0)
-                if (this.enemyBut == undefined) this.randomObj(Phaser.Math.Between(100,400),100)
-            }
-            return true
-        })
     }
-    randomObj(x:number,y:number){
-        this.addOncePlat(x,y)
-  /**
-        if (Phaser.Math.Between(0, 19) < 2)
-        {
-            this.enemyBut = new butEnemy({x:x,y:y,scene:this})
-            //this.enemyBut = new OncePlatform({x:x,y:y,scene:this})
-        }else if(Phaser.Math.Between(0, 10) < 2){
-            new breakPlatform({x:x,y:y,scene:this})
+    randomObj(x:number,y:number,sprite:Phaser.GameObjects.GameObject){
 
+        let randompoint = this.randomCycleDirct(100,100,{x:x,y:y})
+        if (Phaser.Math.Between(0, 19) < 2) {
+            this.addButEnemy(randompoint.x,randompoint.y)
         }else if(Phaser.Math.Between(0, 10) < 2){
-
-            this.addMovePlat(x,y)
-
-        }else if(Phaser.Math.Between(0, 10) < 2){
-            this.addOncePlat(x,y)
+            this.addBreakPlat(randompoint.x,randompoint.y)
         }
-**/
+        randompoint = this.randomCycleDirct(200,200,{x:x,y:y})
+        // console.log(Math.sqrt(Math.pow(x-randompoint.x,2)+Math.pow(randompoint.y,2)))
+        if(Phaser.Math.Between(0, 10) < 2){
+            this.addOncePlat(x,y);
+            (sprite as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).body.reset(randompoint.x,randompoint.y)
+        }else if(Phaser.Math.Between(0, 10) < 2){
+            this.addMovePlat(x,y);
+            (sprite as Phaser.Types.Physics.Arcade.SpriteWithStaticBody).body.reset(randompoint.x,randompoint.y)
+        } else
+        {
+            (sprite as Phaser.Types.Physics.Arcade.SpriteWithStaticBody).body.reset(x,y)
+        }
+        return sprite
     }
 
     addMovePlat(x:number,y:number){
         let mp = this.physics.add.sprite(x,y,'atlas','platform1');
         this.moveplats!.add(mp)
         mp.setCollideWorldBounds(true)
+        mp.body.world.checkCollision.up = false;
         mp.setVelocityX(100);
         (mp.body! as Phaser.Physics.Arcade.Body).allowGravity = false
         mp.body!.immovable = true
     }
     addOncePlat(x:number,y:number){
         let op = this.physics.add.sprite(x,y,'atlas','platform3');
-        this.onceplats!.add(op)
+        this.onceplats!.add(op);
         op.setCollideWorldBounds(true);
+        op.body.world.checkCollision.up = false;
+      //  op.setCollideWorldBounds(true);
         (op.body! as Phaser.Physics.Arcade.Body).allowGravity = false
         op.setMass(0.05)
-        //op.setGravityY(800)
+    }
+    addBreakPlat(x:number,y:number){
+        let bp = this.physics.add.sprite(x,y,'atlas','platform2');
+        this.breakplats!.add(bp);
+        (bp.body! as Phaser.Physics.Arcade.Body).allowGravity = false
+
+    }
+    addButEnemy(x:number,y:number){
+        let enemyBut = this.physics.add.staticSprite(x,y,'atlas','but1')
+        this.enemyGroup!.add(enemyBut)
+        enemyBut.anims.play('butFly')
     }
     gameOver(){
         this.over =true
@@ -388,7 +336,6 @@ class startGame extends Phaser.Scene{
             this.changeColloder(false)
 
         }else {
-         //   console.log(this.player!.body.velocity.y)
             if (!this.platformsColloder!.active && this.player!.body.velocity.y > 0) {//跳跃过程中，防止上方触碰平台
                 this.changeColloder(true)
             }
@@ -399,6 +346,25 @@ class startGame extends Phaser.Scene{
         this.platformsColloder!.active = isActive
         this.movePlatColloder!.active = isActive
         this.oncePlatColloder!.active = isActive
+        this.breakPlatColloder!.active = isActive
+
+    }
+
+    randomCycleDirct(min:number,max:number,point:{x:number,y:number}):{x:number,y:number}{
+        let  angle = Phaser.Math.Between(30,90)
+        let randomdirct = Phaser.Math.Between(min,max)
+        let ydirct =Math.sin(Math.PI/180*angle)*randomdirct
+        let xdirct =Math.cos(Math.PI/180*angle)*randomdirct
+        let x=point.x
+        if (point.x - xdirct < 0) {
+            x+=xdirct
+        }else if(point.x + xdirct >450){
+            x-=xdirct
+        }else{
+            x = Phaser.Math.Between(0,1) == 0? x+xdirct:x-xdirct
+        }
+        return {x:x,y:point.y-ydirct}
+
     }
 
 }
@@ -412,7 +378,7 @@ const config = {
     physics:{
         default:'arcade',
         arcade:{
-            gravity: {y:400},
+            gravity: {y:500},
             debug:false
 
         }
