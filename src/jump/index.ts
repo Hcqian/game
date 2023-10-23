@@ -1,6 +1,4 @@
 import Phaser from "phaser";
-import Pan = Phaser.Cameras.Scene2D.Effects.Pan;
-
 class loadGame extends Phaser.Scene{
 
     constructor() {
@@ -25,15 +23,18 @@ class loadGame extends Phaser.Scene{
         // this.cameras.main.height=config.height-200
       // this.cameras.main.setBounds(-100,-100,500,800)
         let bg = this.add.tileSprite(this.cameras.main.width/2,this.cameras.main.height/2,this.cameras.main.width,this.cameras.main.height,'backgroud')
-       let startbutton = this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','Play_01').setInteractive()
-        //let startbutton = this.add.image(0,0,'atlas','Play_01').setInteractive()
+        let startbutton = this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','Play_01').setInteractive()
+
+       // let test = this.add.sprite(this.cameras.main.width/2,this.cameras.main.height-300,'atlas','bonus2') //火箭
+
+       //let test = this.add.image(this.cameras.main.width/2,this.cameras.main.height-300,'atlas','bonus3') //帽子
+     //   let test = this.add.image(this.cameras.main.width/2,this.cameras.main.height-300,'atlas','bonus01') //弹簧伸长
+     //    let test = this.add.image(this.cameras.main.width/2,this.cameras.main.height-300,'atlas','bonus0') //弹簧压缩
         //this.add.image(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','platform1');
-        //let b = new Phaser.Geom.Rectangle(0, 0, 500, 200)
-
-
 
         startbutton.on('pointerover',()=>{
             startbutton.setTexture('atlas','Play_02')
+            // test.anims.play('bonus2anim')
         })
         startbutton.on('pointerout',()=>{
             startbutton.setTexture('atlas','Play_01')
@@ -46,59 +47,30 @@ class loadGame extends Phaser.Scene{
     }
 
 }
-
-class butEnemy{
-    staticBody?:Phaser.Types.Physics.Arcade.SpriteWithStaticBody
-    private butCollider?:Phaser.Physics.Arcade.Collider
-    scene:startGame
-
-    constructor(config:{x:number,y:number,scene:startGame}) {
-        this.scene =config.scene
-        this.genBut(config.x,config.y)
-    }
-    private genBut(x:number,y:number){
-        this.staticBody = this.scene.physics.add.staticSprite(x,y,'atlas','but1')
-        this.staticBody.anims.play('butFly')
-        // this.butCollider = this.scene.physics.add.collider(this.scene.player!,this.staticBody,()=>{},()=>{
-        //     this.scene.gameOver()
-        //     return false
-        // })
-
-        //this.scene.platforms!.add(this.staticBody)
-    }
-    removeBut(){
-        //this.scene.platforms!.remove(this.staticBody!)
-        //this.scene.anims.remove('butFly')
-        this.scene.physics.world.removeCollider(this.butCollider!)
-        this.staticBody?.destroy()
-    }
-
-
-}
+type updateFunc = {key:String,updateFun:Function}
 class startGame extends Phaser.Scene{
 
     public player?:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
     platforms?:Phaser.Physics.Arcade.StaticGroup
     cursors?:Phaser.Types.Input.Keyboard.CursorKeys
     jumped?:boolean =false
-    move?:boolean = false
     backgroud?:Phaser.GameObjects.TileSprite
-    platformsColloder?:Phaser.Physics.Arcade.Collider
-    movePlatColloder?:Phaser.Physics.Arcade.Collider
-    oncePlatColloder?:Phaser.Physics.Arcade.Collider
-    breakPlatColloder?:Phaser.Physics.Arcade.Collider
-    butColloder?:Phaser.Physics.Arcade.Collider
-    //enemyBut?:Phaser.Types.Physics.Arcade.SpriteWithStaticBody
+    platformsCollider?:Phaser.Physics.Arcade.Collider
+    movePlatCollider?:Phaser.Physics.Arcade.Collider
+    oncePlatCollider?:Phaser.Physics.Arcade.Collider
+    breakPlatCollider?:Phaser.Physics.Arcade.Collider
+    butCollider?:Phaser.Physics.Arcade.Collider
     prePlat?:Phaser.Types.Physics.Arcade.SpriteWithStaticBody
 
-    // onceplats?:Phaser.Physics.Arcade.Group
+    // updateFuncs?:updateFunc[]
+    updateFuncs?:Array<updateFunc> = new Array<updateFunc>()
     breakplats?:Phaser.Physics.Arcade.Group
     moveplats?:Phaser.Physics.Arcade.Group
     onceplats?:Phaser.Physics.Arcade.Group
-    // onceplats?:Phaser.Physics.Arcade.StaticGroup
+    rockets?:Phaser.Physics.Arcade.Group
     enemyGroup?:Phaser.Physics.Arcade.StaticGroup
 
-//    playerY:number = 0
+
 
     over:boolean = false
 
@@ -111,36 +83,29 @@ class startGame extends Phaser.Scene{
         //this.cameras.main.setBounds(0,200,500,1000)
         this.backgroud = data.backgroud
         this.player = this.physics.add.sprite(this.cameras.main.width/2,this.cameras.main.height-200,'player').setScale(0.5,0.5)
+        this.player.parentContainer = this.add.container()
+        // let container = this.add.container();
+        // this.player = this.physics.add.sprite(0,0,'player').setScale(0.5,0.5)
+        // container.add(this.player)
         this.player.setCollideWorldBounds(true)
-
         this.jumped = false;
         this.platforms = this.physics.add.staticGroup()
         this.moveplats = this.physics.add.group()
+        this.rockets = this.physics.add.group({
+            allowGravity: false
+        })
         this.onceplats = this.physics.add.group()
-        //this.onceplats = this.physics.add.staticGroup()
         this.breakplats =this.physics.add.group({
             allowGravity: false
         })
         this.enemyGroup = this.physics.add.staticGroup()
 
         this.platforms.create(this.cameras.main.width/2,this.cameras.main.height-150,'atlas','platform0');
-       // this.prePlat = this.platforms.getChildren()[0]
-        this.platformsColloder = this.physics.add.collider(this.player,this.platforms)
-        this.movePlatColloder = this.physics.add.collider(this.player,this.moveplats)
-        this.oncePlatColloder = this.physics.add.collider(this.player,this.onceplats)
-        this.breakPlatColloder = this.physics.add.collider(this.player!,this.breakplats,()=>{},(object1, object2)=>{
-            let sprite = <Phaser.Physics.Arcade.Sprite> object2;
-                (sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true
-                sprite!.anims.play('platformSheet')
-            return false
-        })
-        this.butColloder = this.physics.add.collider(this.player!,this.enemyGroup,()=>{
-            this.gameOver()
-        })
+        this.addCollider()
 
         this.cursors = this.input.keyboard!.createCursorKeys();
-       this.add.image(320,50,'atlas','top').setDepth(99)
-       this.add.image(320,this.cameras.main.height,'atlas','bottom').setDepth(100)
+        this.add.image(320,50,'atlas','top').setDepth(99)
+        this.add.image(320,this.cameras.main.height,'atlas','bottom').setDepth(100)
 
 
         this.addPlatform()
@@ -150,7 +115,7 @@ class startGame extends Phaser.Scene{
     private addPlatform(){
         this.prePlat = <Phaser.Types.Physics.Arcade.SpriteWithStaticBody>this.platforms!.getChildren()[this.platforms!.getLength()-1]
         for(let i = 0; i < 5; i++){
-            let randompoint = this.randomCycleDirct(200,200,{x:this.prePlat!.x,y:this.prePlat!.y})
+            let randompoint = this.randomCycleDirct(170,220,{x:this.prePlat!.x,y:this.prePlat!.y})
             this.platforms!.create(randompoint.x,randompoint.y,'atlas','platform0')
             this.prePlat = <Phaser.Types.Physics.Arcade.SpriteWithStaticBody>this.platforms!.getChildren()[this.platforms!.getLength()-1]
         }
@@ -177,16 +142,79 @@ class startGame extends Phaser.Scene{
             frameRate:50,
             repeat:-1
         })
+        this.anims.create({// 火箭喷射
+            key: 'bonus2anim',
+            frames:this.anims.generateFrameNames('atlas',{
+                prefix:'bonus2anim_',
+                start:1,
+                end:10,
+                zeroPad:2
+            }),
+            frameRate:10,
+            repeat:0
+        })
 
     }
 
+    private createRocket(x:number,y:number){
+        // let test = this.physics.add.staticSprite(x,y,'atlas','bonus2') //火箭
+        let test = this.physics.add.sprite(x,y,'atlas','bonus2').setScale(0.5,0.5)//火箭
+        this.rockets!.add(test)
+        test.setImmovable(true)
+    }
+    private addCollider(){
+
+        this.platformsCollider = this.physics.add.collider(this.player!,this.platforms!)
+        this.movePlatCollider = this.physics.add.collider(this.player!,this.moveplats!)
+        this.oncePlatCollider = this.physics.add.collider(this.player!,this.onceplats!)
+        this.breakPlatCollider = this.physics.add.collider(this.player!,this.breakplats!,()=>{},(object1, object2)=>{
+            let sprite = <Phaser.Physics.Arcade.Sprite> object2;
+            (sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true
+            sprite!.anims.play('platformSheet')
+            return false
+        })
+        this.butCollider = this.physics.add.collider(this.player!,this.enemyGroup!,()=>{
+            this.gameOver()
+        })
+        let collider = this.physics.add.collider(this.player!,this.rockets!,(object1, object2)=>{
+            let sprite = <Phaser.Physics.Arcade.Sprite> object2;
+            sprite!.anims.play('bonus2anim')
+            sprite.on('animationcomplete',()=>{
+                (sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true;
+                (this.player!.body as Phaser.Physics.Arcade.Body).allowGravity = true
+                this.updateFuncs = this.updateFuncs!.filter(f=>f.key !='rocketUpdate')
+                collider.active = true
+            },this)
+            let update:updateFunc = {key:'rocketUpdate',updateFun:()=>{
+                sprite.y=this.player!.y
+                if( this.player!.flipX){
+                    sprite.x=this.player!.x+20
+                    sprite!.flipX =false
+                }else {
+                    sprite.x=this.player!.x-20
+                    sprite!.flipX =true
+                }
+                (this.player!.body as Phaser.Physics.Arcade.Body).allowGravity = false
+                this.scroll(10)
+            }}
+            this.updateFuncs?.push(update)
+            collider.active =false
+            return false
+        })
+    }
+
+
     private scroll(y:number){
-        //this.platforms!.incY(y).refresh()
-        //this.enemyGroup!.incY(y).refresh()
-        //this.breakplats!.incY(y)
         this.moveplats!.incY(y)
-       // this.onceplats!.incY(y)
         this.backgroud!.tilePositionY -= y
+        for (let i = this.rockets!.getChildren().length -1; i >= 0 ; i--) {
+            let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.rockets!.getChildren()[i]
+            child.y+=y
+            if(child.body!.y>750){
+                this.rockets!.remove(child)
+                child.destroy()
+            }
+        }
         for (let i = this.onceplats!.getChildren().length -1; i >= 0 ; i--) {
             let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.onceplats!.getChildren()[i]
             child.y+=y
@@ -195,7 +223,6 @@ class startGame extends Phaser.Scene{
                 child.destroy()
             }
         }
-
         for (let i = this.breakplats!.getChildren().length -1; i >= 0 ; i--) {
             let child =<Phaser.Types.Physics.Arcade.SpriteWithDynamicBody> this.breakplats!.getChildren()[i]
             child.y+=y
@@ -214,7 +241,6 @@ class startGame extends Phaser.Scene{
                 child.destroy()
             }
         }
-
         this.platforms!.children.iterate((obj:Phaser.GameObjects.GameObject)=>{
             let child =<Phaser.Types.Physics.Arcade.SpriteWithStaticBody> obj
             child.y+=y
@@ -233,7 +259,7 @@ class startGame extends Phaser.Scene{
         if(this.player!.y < 350 || (this.flag <30 && this.flag > 0)) {
             this.scroll(Math.min(this.flag,10))
             this.flag++
-            this.player!.y+=Math.min(this.flag,10)
+            this.player!.y += Math.min(this.flag,10)
         }else {
             this.flag = 0
         }
@@ -259,8 +285,8 @@ class startGame extends Phaser.Scene{
         }else if(Phaser.Math.Between(0, 10) < 2){
             this.addBreakPlat(randompoint.x,randompoint.y)
         }
-        randompoint = this.randomCycleDirct(200,200,{x:x,y:y})
-        // console.log(Math.sqrt(Math.pow(x-randompoint.x,2)+Math.pow(randompoint.y,2)))
+        randompoint = this.randomCycleDirct(170,220,{x:x,y:y})
+        this.createRocket(x,y-30)
         if(Phaser.Math.Between(0, 10) < 2){
             this.addOncePlat(x,y);
             (sprite as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).body.reset(randompoint.x,randompoint.y)
@@ -288,7 +314,6 @@ class startGame extends Phaser.Scene{
         this.onceplats!.add(op);
         op.setCollideWorldBounds(true);
         op.body.world.checkCollision.up = false;
-      //  op.setCollideWorldBounds(true);
         (op.body! as Phaser.Physics.Arcade.Body).allowGravity = false
         op.setMass(0.05)
     }
@@ -296,7 +321,6 @@ class startGame extends Phaser.Scene{
         let bp = this.physics.add.sprite(x,y,'atlas','platform2');
         this.breakplats!.add(bp);
         (bp.body! as Phaser.Physics.Arcade.Body).allowGravity = false
-
     }
     addButEnemy(x:number,y:number){
         let enemyBut = this.physics.add.staticSprite(x,y,'atlas','but1')
@@ -313,6 +337,7 @@ class startGame extends Phaser.Scene{
         if (this.player!.y > 750) this.gameOver()
         super.update(time, delta);
         this.updatePlatform()
+        this.updateFuncs?.forEach(v=> v.updateFun())
         if (this.cursors!.left.isDown) {
             this.player!.setVelocityX(-150);
             this.player!.flipX =true
@@ -333,20 +358,20 @@ class startGame extends Phaser.Scene{
         if(!this.jumped){
             this.jumped = true
             this.player!.setVelocityY(-500)
-            this.changeColloder(false)
+            this.changeCollider(false)
 
         }else {
-            if (!this.platformsColloder!.active && this.player!.body.velocity.y > 0) {//跳跃过程中，防止上方触碰平台
-                this.changeColloder(true)
+            if (!this.platformsCollider!.active && this.player!.body.velocity.y > 0) {//跳跃过程中，防止上方触碰平台
+                this.changeCollider(true)
             }
         }
     }
 
-    changeColloder(isActive:boolean){
-        this.platformsColloder!.active = isActive
-        this.movePlatColloder!.active = isActive
-        this.oncePlatColloder!.active = isActive
-        this.breakPlatColloder!.active = isActive
+    changeCollider(isActive:boolean){
+        this.platformsCollider!.active = isActive
+        this.movePlatCollider!.active = isActive
+        this.oncePlatCollider!.active = isActive
+        this.breakPlatCollider!.active = isActive
 
     }
 
